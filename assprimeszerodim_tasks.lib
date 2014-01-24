@@ -211,7 +211,7 @@ static proc zeroR(ideal I, list #)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-proc assPrimes(list #)
+proc assPrimes_tasks(list #)
 "USAGE:  assPrimes(I,[n],[a]); I ideal or module,
          optional: int n: number of processors (for parallel computing), int a:
          - a = 1: method of Eisenbud/Hunecke/Vasconcelos
