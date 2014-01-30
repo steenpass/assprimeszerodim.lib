@@ -6,6 +6,7 @@ LIBRARY:  assprimeszerodim.lib   associated primes of a zero-dimensional ideal
 
 AUTHORS:  N. Idrees       nazeranjawwad@gmail.com
 @*        G. Pfister      pfister@mathematik.uni-kl.de
+@*        A. Steenpass    steenpass@mathematik.uni-kl.de
 @*        S. Steidel      steidel@mathematik.uni-kl.de
 
 OVERVIEW:
@@ -27,15 +28,41 @@ LIB "modstd_tasks.lib";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-proc zeroRadical(ideal I, list #)
-"USAGE:  zeroRadical(I,[n]); I ideal, optional: n number of processors (for
-         parallel computing)
+proc zeroRadical_tasks(ideal I)
+"USAGE:  zeroRadical(I); I ideal
 ASSUME:  I is zero-dimensional in Q[variables]
 RETURN:  the radical of I
 EXAMPLE: example zeroRadical; shows an example
 "
 {
-   return(zeroR(modStd(I,#),#));
+   if (!attrib(I, "isSB"))
+   {
+      I = modStd_tasks(I);
+   }
+
+   ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
+      Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+      Modular::pTest_default, finalTest_zeroRadical);
+   // TODO: write deleteUnluckyPrimes_zeroRadical()
+
+   poly f;
+   int k;
+   int i;
+   for(i = nvars(basering); i > 0; i--)
+   {
+      f = gcd(F[i], diff(F[i], var(i)));
+      k = k + deg(f);
+      F[i] = F[i]/f;
+   }
+
+   if(k == 0)
+   {
+      return(I);
+   }
+   else
+   {
+      return(modStd_tasks(I + F));
+   }
 }
 example
 { "EXAMPLE:";  echo = 2;
@@ -46,168 +73,14 @@ example
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static proc zeroR(ideal I, list #)
-// compute the radical of I provided that I is zero-dimensional in Q[variables]
-// and a standard basis
+static proc finalTest_zeroRadical(string command, list args, ideal F)
 {
-   attrib(I,"isSB",1);
-   int i, k;
-   int j = 1;
-   int index = 1;
-   int crit;
-
-   list CO1, CO2, P;
-   ideal G, F;
-   bigint N;
-   poly f;
-
-//---------------------  Initialize optional parameter  ------------------------
-   if(size(#) > 0)
+   int i;
+   for(i = nvars(basering); i > 0; i--)
    {
-      int n1 = #[1];
-      if(n1 >= 10)
-      {
-         int n2 = n1 + 1;
-         int n3 = n1;
-      }
-      else
-      {
-         int n2 = 10;
-         int n3 = 10;
-      }
+      if(reduce(F[i], args[1]) != 0) { return(0); }
    }
-   else
-   {
-      int n1 = 1;
-      int n2 = 10;
-      int n3 = 10;
-   }
-
-//--------------------  Initialize the list of primes  -------------------------
-   intvec L = primeList(I,n2);
-   L[5] = prime(random(100000000,536870912));
-
-   if(n1 > 1)
-   {
-
-//-----  Create n links l(1),...,l(n1), open all of them and compute  ----------
-//-----  polynomial F for the primes L[2],...,L[n1 + 1].              ----------
-
-      for(i = 1; i <= n1; i++)
-      {
-         //link l(i) = "MPtcp:fork";
-         link l(i) = "ssi:fork";
-         open(l(i));
-         write(l(i), quote(zeroRadP(eval(I), eval(L[i + 1]))));
-      }
-
-      int t = timer;
-      P = zeroRadP(I, L[1]);
-      t = timer - t;
-      if(t > 60) { t = 60; }
-      int i_sleep = system("sh", "sleep "+string(t));
-      CO1[index] = P[1];
-      CO2[index] = bigint(P[2]);
-      index++;
-
-      j = j + n1 + 1;
-   }
-
-//---------  Main computations in positive characteristic start here  ----------
-
-   while(!crit)
-   {
-      if(n1 > 1)
-      {
-         while(j <= size(L) + 1)
-         {
-            for(i = 1; i <= n1; i++)
-            {
-               if(status(l(i), "read", "ready"))
-               {
-                  //--- read the result from l(i) ---
-                  P = read(l(i));
-                  CO1[index] = P[1];
-                  CO2[index] = bigint(P[2]);
-                  index++;
-
-                  if(j <= size(L))
-                  {
-                     write(l(i), quote(zeroRadP(eval(I), eval(L[j]))));
-                     j++;
-                  }
-                  else
-                  {
-                     k++;
-                     close(l(i));
-                  }
-               }
-            }
-            //--- k describes the number of closed links ---
-            if(k == n1)
-            {
-               j++;
-            }
-            //--- sleep for t seconds ---
-            i_sleep = system("sh", "sleep "+string(t));
-         }
-      }
-      else
-      {
-         while(j <= size(L))
-         {
-            P = zeroRadP(I, L[j]);
-            CO1[index] = P[1];
-            CO2[index] = bigint(P[2]);
-            index++;
-            j++;
-         }
-      }
-
-      // insert deleteUnluckyPrimes
-      G = chinrem(CO1,CO2);
-      N = CO2[1];
-      for(i = 2; i <= size(CO2); i++){ N = N*CO2[i]; }
-      F = farey(G,N);
-
-      crit = 1;
-      for(i = 1; i <= nvars(basering); i++)
-      {
-         if(reduce(F[i],I) != 0) { crit = 0; break; }
-      }
-
-      if(!crit)
-      {
-         CO1 = G;
-         CO2 = N;
-         index = 2;
-
-         j = size(L) + 1;
-         L = primeList(I,n3,L);
-
-         if(n1 > 1)
-         {
-            for(i = 1; i <= n1; i++)
-            {
-               open(l(i));
-               write(l(i), quote(zeroRadP(eval(I), eval(L[j+i-1]))));
-            }
-            j = j + n1;
-            k = 0;
-         }
-      }
-   }
-
-   k = 0;
-   for(i = 1; i <= nvars(basering); i++)
-   {
-      f = gcd(F[i],diff(F[i],var(i)));
-      k = k + deg(f);
-      F[i] = F[i]/f;
-   }
-
-   if(k == 0) { return(I); }
-   else { return(modStd(I + F, n1)); }
+   return(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,7 +143,7 @@ EXAMPLE: example assPrimes; shows an example
          {
             if(attrib(#[1],"isRad") == 0)
             {
-               I = zeroR(I,n1);
+               I = zeroRadical(I);
                I = std(I);
                d = vdim(I);
                f = findGen(I);
@@ -278,7 +151,7 @@ EXAMPLE: example assPrimes; shows an example
          }
          else
          {
-            I = zeroR(I,n1);
+            I = zeroRadical(I);
             I = std(I);
             d = vdim(I);
             f = findGen(I);
@@ -514,23 +387,22 @@ static proc pTestRad(int d, poly p1, ideal I)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static proc zeroRadP(ideal I, int p)
+/* Computes an ideal F such that ncols(F) = nvars(basering),
+ * < F[i] > = (I intersected with K[var(i)]), and F[i] is monic.
+ */
+static proc zeroRadP(ideal I)
 {
-//=== computes F=(F_1,...,F_n) such that <F_i>=IZ/p[x_1,...,x_n] intersected
-//=== with Z/p[x_i], F_i monic
-   def R0 = basering;
-   list ringL = ringlist(R0);
-   ringL[1] = p;
-   def @r = ring(ringL);
-   setring @r;
-   ideal I = fetch(R0,I);
+   intvec opt = option(get);
    option(redSB);
    I = std(I);
-   ideal F = finduni(I); //F[i] generates I intersected with K[var(i)]
+   ideal F = finduni(I);   // F[i] generates I intersected with K[var(i)]
    int i;
-   for(i = 1; i <= size(F); i++){ F[i] = simplify(F[i],1); }
-   setring R0;
-   return(list(fetch(@r,F),p));
+   for(i = 1; i <= size(F); i++)
+   {
+      F[i] = simplify(F[i], 1);
+   }
+   option(set, opt);
+   return(F);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
