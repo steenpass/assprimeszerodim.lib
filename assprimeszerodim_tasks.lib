@@ -215,17 +215,24 @@ static proc specialAlgDepEHV(ideal I, poly f)
 static proc specialAlgDepGTZ(ideal I, poly f)
 {
    def R = basering;
-   def Rlp = changeord(list(list("dp", 1:(nvars(R)-1)), list("dp", 1:1)));
-   setring(Rlp);
-   poly f = imap(R, f);
+   if(nvars(R) > 1)
+   {
+      def Rlp = changeord(list(list("dp", 1:(nvars(R)-1)), list("dp", 1:1)));
+      setring(Rlp);
+      poly f = imap(R, f);
+      ideal I;
+   }
    ideal K = maxideal(1);
    K[nvars(R)] = 2*var(nvars(R))-f;
    map phi = R, K;
-   ideal I = phi(I);
+   I = phi(I);
    I = std(I);
    ideal F = I[1];
-   setring(R);
-   ideal F = imap(Rlp, F);
+   if(nvars(R) > 1)
+   {
+      setring(R);
+      ideal F = imap(Rlp, F);
+   }
    return(F);
 }
 
