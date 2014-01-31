@@ -143,7 +143,7 @@ EXAMPLE: example assPrimes; shows an example
          {
             if(attrib(#[1],"isRad") == 0)
             {
-               I = zeroRadical(I);
+               I = zeroRadical_tasks(I);
                I = std(I);
                d = vdim(I);
                f = findGen(I);
@@ -151,7 +151,7 @@ EXAMPLE: example assPrimes; shows an example
          }
          else
          {
-            I = zeroRadical(I);
+            I = zeroRadical_tasks(I);
             I = std(I);
             d = vdim(I);
             f = findGen(I);
