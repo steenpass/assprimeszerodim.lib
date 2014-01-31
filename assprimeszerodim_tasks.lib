@@ -396,11 +396,7 @@ static proc zeroRadP(ideal I)
    option(redSB);
    I = std(I);
    ideal F = finduni(I);   // F[i] generates I intersected with K[var(i)]
-   int i;
-   for(i = 1; i <= size(F); i++)
-   {
-      F[i] = simplify(F[i], 1);
-   }
+   F = simplify(F, 1);
    option(set, opt);
    return(F);
 }
@@ -445,6 +441,7 @@ static proc modpSpecialAlgDep(ideal I, poly f, int d, int alg)
    if(alg == 1) { F = specialAlgDepEHV(I, f); }
    if(alg == 2) { F = specialAlgDepGTZ(I, f); }
    if(alg == 3) { F = specialAlgDepMonico(I, f, d); }
+   F = simplify(F, 1);
    return(F);
 }
 
