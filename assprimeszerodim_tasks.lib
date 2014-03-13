@@ -139,9 +139,9 @@ EXAMPLE: example assPrimes; shows an example
       }
       if(!spT)
       {
-         if(typeof(attrib(#[1],"isRad")) == "int")
+         if(typeof(attrib(I, "isRad")) == "int")
          {
-            if(attrib(#[1],"isRad") == 0)
+            if(attrib(I, "isRad") == 0)
             {
                I = zeroRadical_tasks(I);
                I = std(I);
