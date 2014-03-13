@@ -122,7 +122,9 @@ EXAMPLE: example assPrimes; shows an example
    }
 
    if(printlevel >= 10) { "========== Start modStd =========="; }
-   I = modStd_tasks(I);
+   if (!attrib(I, "isSB")) {
+       I = modStd_tasks(I);
+   }
    if(printlevel >= 10) { "=========== End modStd ==========="; }
    int d = vdim(I);
    if(d == -1) { ERROR("Ideal is not zero-dimensional."); }
