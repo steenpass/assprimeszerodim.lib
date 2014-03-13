@@ -134,7 +134,11 @@ EXAMPLE: example assPrimes; shows an example
 
    if(size(f) == nvars(basering))
    {
-      int spT = pTestRad(d,f,I);
+      int spT;
+      if(npars(basering) == 0)
+      {
+         spT = pTestRad(d,f,I);
+      }
       if(printlevel >= 9)
       {
          "pTestRad(d,f,I) = "+string(spT);
