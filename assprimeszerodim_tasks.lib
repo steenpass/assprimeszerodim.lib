@@ -351,8 +351,22 @@ static proc pTestRad(int d, poly p1, ideal I)
    def R = basering;
    list rl = ringlist(R);
    int q1 = prime(random(100000000,536870912));
-   rl[1] = q1;
-   ring Shelp1 = q1,T,dp;
+   if(typeof(rl[1]) == "int")
+   {
+       rl[1] = q1;
+   }
+   else
+   {
+       rl[1][1] = q1;
+   }
+   if(npars(R) == 0)
+   {
+       ring Shelp1 = q1, T, dp;
+   }
+   else
+   {
+       execute("ring Shelp1 = (q1,"+parstr(R)+") ,T, dp;");
+   }
    setring R;
    def Rhelp1 = ring(rl);
    setring Rhelp1;
