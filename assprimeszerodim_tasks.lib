@@ -27,23 +27,48 @@ LIB "modstd_tasks.lib";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-proc zeroRadical_tasks(ideal I)
-"USAGE:  zeroRadical(I); I ideal
+proc zeroRadical_tasks(ideal I, list #)
+"USAGE:  zeroRadical(I[, exactness]); I ideal, exactness int
 ASSUME:  I is zero-dimensional in Q[variables]
 RETURN:  the radical of I
+NOTE:    a final test is applied to the result if exactness != 0 (default),
+         otherwise no final test is done
 EXAMPLE: example zeroRadical; shows an example
 "
 {
+   /* read optional parameter */
+   int exactness = 1;
+   if(size(#) > 0)
+   {
+      if(size(#) > 1 || typeof(#[1]) != "int")
+      {
+         ERROR("wrong optional parameter");
+      }
+      exactness = #[1];
+   }
+
+   /* compute a standard basis if necessary */
    if (!attrib(I, "isSB"))
    {
       I = modStd_tasks(I);
    }
 
-   ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
-      Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
-      pTest_zeroRadical, finalTest_zeroRadical);
-   // TODO: write deleteUnluckyPrimes_zeroRadical()
+   /* call modular() */
+  // TODO: write deleteUnluckyPrimes_zeroRadical()
+   if(exactness)
+   {
+      ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
+         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         pTest_zeroRadical, finalTest_zeroRadical);
+   }
+   else
+   {
+      ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
+         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         pTest_zeroRadical);
+   }
 
+   /* compute the squarefree parts */
    poly f;
    int k;
    int i;
@@ -54,6 +79,7 @@ EXAMPLE: example zeroRadical; shows an example
       F[i] = F[i]/f;
    }
 
+   /* return the result */
    if(k == 0)
    {
       return(I);
