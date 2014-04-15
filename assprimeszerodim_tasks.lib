@@ -143,15 +143,19 @@ static proc finalTest_zeroRadical(string command, list args, ideal F)
 ////////////////////////////////////////////////////////////////////////////////
 
 proc assPrimes_tasks(def I, list #)
-"USAGE:  assPrimes(I[, a]); I ideal or module, a int (optional).
-         - a = 1: method of Eisenbud/Hunecke/Vasconcelos (default)
-         - a = 2: method of Gianni/Trager/Zacharias
-         - a = 3: method of Monico
+"USAGE:  assPrimes(I[, alg, exactness]); I ideal or module,
+         alg string (optional), exactness int (optional)
+         - alg = "GTZ":    method of Gianni/Trager/Zacharias (default)
+         - alg = "EHV":    method of Eisenbud/Hunecke/Vasconcelos
+         - alg = "Monico": method of Monico
 ASSUME:  I is zero-dimensional over Q[variables]
 RETURN:  a list of the associated primes of I
+NOTE:    a final test is applied to the result if exactness != 0 (default),
+         otherwise no final test is done
 EXAMPLE: example assPrimes; shows an example
 "
 {
+   /* read input */
    if(typeof(I) != "ideal")
    {
       if(typeof(I) != "module")
@@ -164,20 +168,41 @@ EXAMPLE: example assPrimes; shows an example
       kill M;
    }
 
-   int alg = 1;
-   if(size(#) > 0)
+   /* read optional parameters */
+   list defaults = list("GTZ", 1);
+   int i;
+   for(i = 1; i <= size(defaults); i++)
    {
-      if(size(#) > 1 || typeof(#[1]) != "int")
+      if(typeof(#[i]) != typeof(defaults[i]))
       {
-         ERROR("wrong optional parameter");
-      }
-      alg = #[1];
-      if(alg < 1 || alg > 3)
-      {
-         ERROR("unknown method");
+         # = insert(#, defaults[i], i-1);
       }
    }
+   if(size(#) != size(defaults))
+   {
+      ERROR("wrong optional parameters");
+   }
+   string alg = #[1];
+   int exactness = #[2];
+   int a;
+   if(alg == "GTZ")
+   {
+      a = 1;
+   }
+   if(alg == "EHV")
+   {
+      a = 2;
+   }
+   if(alg == "Monico")
+   {
+      a = 3;
+   }
+   if(a == 0)   // alg != "GTZ" && alg != "EHV" && alg != "Monico"
+   {
+      ERROR("unknown method");
+   }
 
+   /* compute a standard basis if necessary */
    if(printlevel >= 10) { "========== Start modStd =========="; }
    if (!attrib(I, "isSB")) {
        I = modStd_tasks(I);
@@ -186,9 +211,12 @@ EXAMPLE: example assPrimes; shows an example
    int d = vdim(I);
    if(d == -1) { ERROR("Ideal is not zero-dimensional."); }
    if(homog(I) == 1) { return(list(maxideal(1))); }
+
+   /* find a coordinate change */
    poly f = findGen(I);
    if(printlevel >= 9) { "Coordinate change: "+string(f); }
 
+   /* compute the radical if necessary */
    if(size(f) == nvars(basering))
    {
       int spT;
@@ -206,7 +234,7 @@ EXAMPLE: example assPrimes; shows an example
          {
             if(attrib(I, "isRad") == 0)
             {
-               I = zeroRadical_tasks(I);
+               I = zeroRadical_tasks(I, exactness);
                I = std(I);
                d = vdim(I);
                f = findGen(I);
@@ -214,7 +242,7 @@ EXAMPLE: example assPrimes; shows an example
          }
          else
          {
-            I = zeroRadical_tasks(I);
+            I = zeroRadical_tasks(I, exactness);
             I = std(I);
             d = vdim(I);
             f = findGen(I);
@@ -222,18 +250,31 @@ EXAMPLE: example assPrimes; shows an example
       }
    }
 
-   ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
-      list(I, f, d, alg),
-      Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
-      pTest_assPrimes, finalTest_assPrimes);
+   /* call modular() */
+   if(exactness)
+   {
+      ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
+         list(I, f, d, a),
+         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         pTest_assPrimes, finalTest_assPrimes);
+   }
+   else
+   {
+      ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
+         list(I, f, d, a),
+         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         pTest_assPrimes);
+   }
 
+   /* compute the components */
    list result;
    list H = factorize(F[1]);
-   int i;
    for(i = size(H[1])-1; i > 0; i--)
    {
       result[i] = I + ideal(quickSubst(H[1][i+1], f, I));
    }
+
+   /* return the result */
    return(result);
 }
 example
