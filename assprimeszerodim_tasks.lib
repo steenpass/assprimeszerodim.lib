@@ -41,7 +41,7 @@ EXAMPLE: example zeroRadical; shows an example
 
    ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
       Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
-      Modular::pTest_default, finalTest_zeroRadical);
+      pTest_zeroRadical, finalTest_zeroRadical);
    // TODO: write deleteUnluckyPrimes_zeroRadical()
 
    poly f;
@@ -68,6 +68,38 @@ example
    ring R = 0, (x,y), dp;
    ideal I = xy4-2xy2+x, x2-x, y4-2y2+1;
    zeroRadical(I);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static proc pTest_zeroRadical(string command, list args, ideal result, int p)
+{
+   def br = basering;
+   list lbr = ringlist(br);
+   if(typeof(lbr[1]) == "int")
+   {
+      lbr[1] = p;
+   }
+   else
+   {
+      lbr[1][1] = p;
+   }
+   def rp = ring(lbr);
+   setring(rp);
+   ideal Ip = fetch(br, args)[1];
+   ideal Fp_result = fetch(br, result);
+   execute("ideal Fp = "+command+"(Ip);");
+   int i;
+   for(i = nvars(br); i > 0; i--)
+   {
+      if(Fp[i] != Fp_result[i])
+      {
+         setring(br);
+         return(0);
+      }
+   }
+   setring(br);
+   return(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
