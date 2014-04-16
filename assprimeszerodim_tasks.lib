@@ -50,7 +50,7 @@ EXAMPLE: example zeroRadical; shows an example
    /* compute a standard basis if necessary */
    if (!attrib(I, "isSB"))
    {
-      I = modStd_tasks(I);
+      I = modStd_tasks(I, exactness);
    }
 
    /* call modular() */
@@ -86,7 +86,7 @@ EXAMPLE: example zeroRadical; shows an example
    }
    else
    {
-      return(modStd_tasks(I + F));
+      return(modStd_tasks(I + F), exactness);
    }
 }
 example
@@ -205,7 +205,7 @@ EXAMPLE: example assPrimes; shows an example
    /* compute a standard basis if necessary */
    if(printlevel >= 10) { "========== Start modStd =========="; }
    if (!attrib(I, "isSB")) {
-       I = modStd_tasks(I);
+       I = modStd_tasks(I, exactness);
    }
    if(printlevel >= 10) { "=========== End modStd ==========="; }
    int d = vdim(I);
@@ -235,7 +235,7 @@ EXAMPLE: example assPrimes; shows an example
             if(attrib(I, "isRad") == 0)
             {
                I = zeroRadical_tasks(I, exactness);
-               I = std(I);
+               I = modStd_tasks(I, exactness);
                d = vdim(I);
                f = findGen(I);
             }
@@ -243,7 +243,7 @@ EXAMPLE: example assPrimes; shows an example
          else
          {
             I = zeroRadical_tasks(I, exactness);
-            I = std(I);
+            I = modStd_tasks(I, exactness);
             d = vdim(I);
             f = findGen(I);
          }
