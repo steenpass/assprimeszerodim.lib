@@ -212,6 +212,16 @@ EXAMPLE: example assPrimes; shows an example
    if(d == -1) { ERROR("Ideal is not zero-dimensional."); }
    if(homog(I) == 1) { return(list(maxideal(1))); }
 
+   /* compute the radical if final tests are not required */
+   // Computing the radical using modular methods, but without final test, is
+   // usually much faster than pTestRad() below which can thus be avoided.
+   if(!exactness)
+   {
+      I = zeroRadical_tasks(I, exactness);
+      I = modStd_tasks(I, exactness);
+      d = vdim(I);
+   }
+
    /* find a coordinate change */
    poly f = findGen(I);
    if(printlevel >= 9) { "Coordinate change: "+string(f); }
