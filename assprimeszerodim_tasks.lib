@@ -23,7 +23,7 @@ PROCEDURES:
 ";
 
 LIB "primdec.lib";
-LIB "modstd_tasks.lib";
+LIB "modstd.lib";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +50,7 @@ EXAMPLE: example zeroRadical; shows an example
    /* compute a standard basis if necessary */
    if (!attrib(I, "isSB"))
    {
-      I = modStd_tasks(I, exactness);
+      I = modStd(I, exactness);
    }
 
    /* call modular() */
@@ -58,13 +58,13 @@ EXAMPLE: example zeroRadical; shows an example
    if(exactness)
    {
       ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
-         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_zeroRadical, finalTest_zeroRadical);
    }
    else
    {
       ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
-         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_zeroRadical);
    }
 
@@ -86,7 +86,7 @@ EXAMPLE: example zeroRadical; shows an example
    }
    else
    {
-      return(modStd_tasks(I + F), exactness);
+      return(modStd(I + F), exactness);
    }
 }
 example
@@ -205,7 +205,7 @@ EXAMPLE: example assPrimes; shows an example
    /* compute a standard basis if necessary */
    if(printlevel >= 10) { "========== Start modStd =========="; }
    if (!attrib(I, "isSB")) {
-       I = modStd_tasks(I, exactness);
+       I = modStd(I, exactness);
    }
    if(printlevel >= 10) { "=========== End modStd ==========="; }
    int d = vdim(I);
@@ -218,7 +218,7 @@ EXAMPLE: example assPrimes; shows an example
    if(!exactness)
    {
       I = zeroRadical_tasks(I, exactness);
-      I = modStd_tasks(I, exactness);
+      I = modStd(I, exactness);
       d = vdim(I);
    }
 
@@ -245,7 +245,7 @@ EXAMPLE: example assPrimes; shows an example
             if(attrib(I, "isRad") == 0)
             {
                I = zeroRadical_tasks(I, exactness);
-               I = modStd_tasks(I, exactness);
+               I = modStd(I, exactness);
                d = vdim(I);
                f = findGen(I);
             }
@@ -253,7 +253,7 @@ EXAMPLE: example assPrimes; shows an example
          else
          {
             I = zeroRadical_tasks(I, exactness);
-            I = modStd_tasks(I, exactness);
+            I = modStd(I, exactness);
             d = vdim(I);
             f = findGen(I);
          }
@@ -265,14 +265,14 @@ EXAMPLE: example assPrimes; shows an example
    {
       ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
          list(I, f, d, a),
-         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_assPrimes, finalTest_assPrimes);
    }
    else
    {
       ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
          list(I, f, d, a),
-         Modstd_tasks::primeTest_std, Modular::deleteUnluckyPrimes_default,
+         Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_assPrimes);
    }
 
