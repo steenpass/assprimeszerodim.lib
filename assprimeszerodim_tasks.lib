@@ -98,8 +98,10 @@ example
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* The pTest for zeroRadical(), to be used in modular(). */
 static proc pTest_zeroRadical(string command, list args, ideal result, int p)
 {
+   /* change to characteristic p */
    def br = basering;
    list lbr = ringlist(br);
    if(typeof(lbr[1]) == "int")
@@ -114,6 +116,8 @@ static proc pTest_zeroRadical(string command, list args, ideal result, int p)
    setring(rp);
    ideal Ip = fetch(br, args)[1];
    ideal Fp_result = fetch(br, result);
+
+   /* run the command and compare with given result */
    execute("ideal Fp = "+command+"(Ip);");
    int i;
    for(i = nvars(br); i > 0; i--)
@@ -130,6 +134,7 @@ static proc pTest_zeroRadical(string command, list args, ideal result, int p)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* The finalTest for zeroRadical, to be used in modular(). */
 static proc finalTest_zeroRadical(string command, list args, ideal F)
 {
    int i;
@@ -570,6 +575,9 @@ static proc quickSubst(poly h, poly r, ideal I)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Simple switch for specialAlgDepEHV, specialAlgDepGTZ, and
+ * specialAlgDepMonico.
+ */
 static proc modpSpecialAlgDep(ideal I, poly f, int d, int alg)
 {
    ideal F;
@@ -582,6 +590,7 @@ static proc modpSpecialAlgDep(ideal I, poly f, int d, int alg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* The pTest for assPrimes(), to be used in modular(). */
 static proc pTest_assPrimes(string command, list args, ideal F, int p)
 {
    def br = basering;
@@ -607,6 +616,7 @@ static proc pTest_assPrimes(string command, list args, ideal F, int p)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* The finalTest for assPrimes(), to be used in modular(). */
 static proc finalTest_assPrimes(string command, alias list args, ideal F)
 {
    F = cleardenom(F[1]);
