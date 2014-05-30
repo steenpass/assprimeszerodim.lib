@@ -27,7 +27,7 @@ LIB "modstd.lib";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-proc zeroRadical_tasks(ideal I, list #)
+proc zeroRadical(ideal I, list #)
 "USAGE:  zeroRadical(I[, exactness]); I ideal, exactness int
 ASSUME:  I is zero-dimensional in Q[variables]
 RETURN:  the radical of I
@@ -142,7 +142,7 @@ static proc finalTest_zeroRadical(string command, list args, ideal F)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-proc assPrimes_tasks(def I, list #)
+proc assPrimes(def I, list #)
 "USAGE:  assPrimes(I[, alg, exactness]); I ideal or module,
          alg string (optional), exactness int (optional)
          - alg = "GTZ":    method of Gianni/Trager/Zacharias (default)
@@ -217,7 +217,7 @@ EXAMPLE: example assPrimes; shows an example
    // usually much faster than pTestRad() below which can thus be avoided.
    if(!exactness)
    {
-      I = zeroRadical_tasks(I, exactness);
+      I = zeroRadical(I, exactness);
       I = modStd(I, exactness);
       d = vdim(I);
    }
@@ -244,7 +244,7 @@ EXAMPLE: example assPrimes; shows an example
          {
             if(attrib(I, "isRad") == 0)
             {
-               I = zeroRadical_tasks(I, exactness);
+               I = zeroRadical(I, exactness);
                I = modStd(I, exactness);
                d = vdim(I);
                f = findGen(I);
@@ -252,7 +252,7 @@ EXAMPLE: example assPrimes; shows an example
          }
          else
          {
-            I = zeroRadical_tasks(I, exactness);
+            I = zeroRadical(I, exactness);
             I = modStd(I, exactness);
             d = vdim(I);
             f = findGen(I);
