@@ -57,13 +57,13 @@ EXAMPLE: example zeroRadical; shows an example
    // TODO: write deleteUnluckyPrimes_zeroRadical()
    if(exactness)
    {
-      ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
+      ideal F = modular("Assprimeszerodim::zeroRadP", list(I),
          Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_zeroRadical, finalTest_zeroRadical);
    }
    else
    {
-      ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
+      ideal F = modular("Assprimeszerodim::zeroRadP", list(I),
          Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_zeroRadical);
    }
@@ -235,14 +235,14 @@ EXAMPLE: example assPrimes; shows an example
    /* call modular() */
    if(exactness)
    {
-      ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
+      ideal F = modular("Assprimeszerodim::modpSpecialAlgDep",
          list(I, f, d, a),
          Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_assPrimes, finalTest_assPrimes);
    }
    else
    {
-      ideal F = modular("Assprimeszerodim_tasks::modpSpecialAlgDep",
+      ideal F = modular("Assprimeszerodim::modpSpecialAlgDep",
          list(I, f, d, a),
          Modstd::primeTest_std, Modular::deleteUnluckyPrimes_default,
          pTest_assPrimes);
