@@ -31,8 +31,8 @@ proc zeroRadical(ideal I, list #)
 "USAGE:  zeroRadical(I[, exactness]); I ideal, exactness int
 ASSUME:  I is zero-dimensional in Q[variables]
 RETURN:  the radical of I
-NOTE:    a final test is applied to the result if exactness != 0 (default),
-         otherwise no final test is done
+NOTE:    A final test is applied to the result if exactness != 0 (default),
+         otherwise no final test is done.
 EXAMPLE: example zeroRadical; shows an example
 "
 {
@@ -54,7 +54,7 @@ EXAMPLE: example zeroRadical; shows an example
    }
 
    /* call modular() */
-  // TODO: write deleteUnluckyPrimes_zeroRadical()
+   // TODO: write deleteUnluckyPrimes_zeroRadical()
    if(exactness)
    {
       ideal F = modular("Assprimeszerodim_tasks::zeroRadP", list(I),
@@ -155,8 +155,8 @@ proc assPrimes(def I, list #)
          - alg = "Monico": method of Monico
 ASSUME:  I is zero-dimensional over Q[variables]
 RETURN:  a list of the associated primes of I
-NOTE:    a final test is applied to the result if exactness != 0 (default),
-         otherwise no final test is done
+NOTE:    A final test is applied to the result if exactness != 0 (default),
+         otherwise no final test is done.
 EXAMPLE: example assPrimes; shows an example
 "
 {
