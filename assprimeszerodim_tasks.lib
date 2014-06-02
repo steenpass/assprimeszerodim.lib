@@ -217,53 +217,20 @@ EXAMPLE: example assPrimes; shows an example
    if(d == -1) { ERROR("Ideal is not zero-dimensional."); }
    if(homog(I) == 1) { return(list(maxideal(1))); }
 
-   /* compute the radical if final tests are not required */
-   // Computing the radical using modular methods, but without final test, is
-   // usually much faster than pTestRad() below which can thus be avoided.
-   if(!exactness)
-   {
-      I = zeroRadical(I, exactness);
-      I = modStd(I, exactness);
-      d = vdim(I);
-   }
-
-   /* find a coordinate change */
-   poly f = findGen(I);
-   if(printlevel >= 9) { "Coordinate change: "+string(f); }
-
    /* compute the radical if necessary */
-   if(size(f) == nvars(basering))
+   ideal J = I;
+   int isRad;
+   poly f;
+   isRad, f = pTestRad(I, d);
+   while(!isRad)
    {
-      int spT;
-      if(npars(basering) == 0)
-      {
-         spT = pTestRad(d,f,I);
-      }
-      if(printlevel >= 9)
-      {
-         "pTestRad(d,f,I) = "+string(spT);
-      }
-      if(!spT)
-      {
-         if(typeof(attrib(I, "isRad")) == "int")
-         {
-            if(attrib(I, "isRad") == 0)
-            {
-               I = zeroRadical(I, exactness);
-               I = modStd(I, exactness);
-               d = vdim(I);
-               f = findGen(I);
-            }
-         }
-         else
-         {
-            I = zeroRadical(I, exactness);
-            I = modStd(I, exactness);
-            d = vdim(I);
-            f = findGen(I);
-         }
-      }
+      J = zeroRadical(I, exactness);
+      J = modStd(J, exactness);
+      d = vdim(J);
+      isRad, f = pTestRad(J, d);
    }
+   I = J;
+   kill J;
 
    /* call modular() */
    if(exactness)
@@ -401,128 +368,122 @@ static proc specialTest(int d, poly p, ideal I)
    ideal F = preimage(R,phi,I);
    int e=deg(F[1]);
    setring R;
-   return((e==d));
+   return((e==d), fetch(Rhelp, F)[1]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static proc findGen(ideal J, list #)
+/* Assume d = vector space dim(basering/J).
+ * Tries to find a (sparse) linear form r such that d = deg(F), where
+ * F is a poly in Q[T] such that <F> = kernel(Q[T]-->basering) mapping T to r.
+ * If found, returns (1, r, F). If not found, returns (0, 0, 0).
+ */
+static proc findGen(ideal J, int d)
 {
-//=== try to find a sparse linear form r such that
-//=== vector space dim(basering/J)=deg(F),
-//=== F a poly in Q[T] such that <F>=kernel(Q[T]--->basering) mapping T to r
-//=== if not found returns a generic (randomly chosen) r
-   int d = vdim(J);
    def R = basering;
    int n = nvars(R);
-   list rl = ringlist(R);
-   if(size(#) > 0) { int p = #[1]; }
-   else { int p = prime(random(1000000000,2134567879)); }
-   rl[1] = p;
-   def @R = ring(rl);
-   setring @R;
-   ideal J = imap(R,J);
+   int okay;
+   poly F;
+
+   /* try trivial transformation */
    poly r = var(n);
-   int i,k;
-   k = specialTest(d,r,J);
-   if(!k)
+   okay, F = specialTest(d, r, J);
+   if(okay)
    {
-      for(i = 1; i < n; i++)
+      return(1, r, F);
+   }
+
+   /* try transformations of the form var(n) + var(i) */
+   int i;
+   for(i = 1; i < n; i++)
+   {
+      okay, F = specialTest(d, r+var(i), J);
+      if(okay)
       {
-         k = specialTest(d,r+var(i),J);
-         if(k){ r = r + var(i); break; }
+         return(1, r+var(i), F);
       }
    }
-   if((!k) && (n > 2))
+
+   /* try transformations of the form var(n) + \sum var(i) */
+   if(n > 2)
    {
       for(i = 1; i < n; i++)
       {
          r = r + var(i);
-         k = specialTest(d,r,J);
-         if(k){ break; }
+         okay, F = specialTest(d, r, J);
+         if(okay)
+         {
+            return(1, r, F);
+         }
       }
    }
-   setring R;
-   poly r = randomLast(100)[nvars(R)];
-   if(k){ r = imap(@R,r); }
-   return(r);
+
+   /* try random transformations */
+   int N = 2;   // arbitrarily chosen
+   for(i = N; i > 0; i--)
+   {
+      r = randomLast(100)[n];
+      okay, F = specialTest(d, r, J);
+      if(okay)
+      {
+         return(1, r, F);
+      }
+   }
+
+   /* not found */
+   return(0, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static proc pTestRad(int d, poly p1, ideal I)
+/* Assume d = vector space dim(basering/I).
+ * Tests if I is radical over F_p, where p is some randomly chosen prime.
+ * If yes, chooses a linear form r such that d = deg(squarefreepart(F)), where
+ * F is a poly in Z/p[T] such that <F> = kernel(Z/p[T]-->Z/p[vars(basering)])
+ * mapping T to r.
+ * Returns (1, r), if I is radical over F_p, and (0, 0) otherwise.
+ */
+static proc pTestRad(ideal I, int d)
 {
-//=== computes a poly F in Z/q1[T] such that
-//===                    <F> = kernel(Z/q1[T]--->Z/q1[vars(basering)])
-//=== mapping T to p1 and test if d=deg(squarefreepart(F)), q1 a prime randomly
-//=== chosen
-//=== If not choose randomly another prime q2 and another linear form p2 and
-//=== computes a poly F in Z/q2[T] such that
-//===                    <F> = kernel(Z/q2[T]--->Z/q2[vars(basering)])
-//=== mapping T to p2 and test if d=deg(squarefreepart(F))
-//=== if the test is positive then I is radical
+   int N = 2;   // Try N random primes. Value of N can be chosen arbitrarily.
    def R = basering;
    list rl = ringlist(R);
-   int q1 = prime(random(100000000,536870912));
-   if(typeof(rl[1]) == "int")
+   int p;
+   int okay;
+   int i;
+   for(i = N; i > 0; i--)
    {
-       rl[1] = q1;
-   }
-   else
-   {
-       rl[1][1] = q1;
-   }
-   if(npars(R) == 0)
-   {
-       ring Shelp1 = q1, T, dp;
-   }
-   else
-   {
-       execute("ring Shelp1 = (q1,"+parstr(R)+") ,T, dp;");
-   }
-   setring R;
-   def Rhelp1 = ring(rl);
-   setring Rhelp1;
-   poly p1 = imap(R,p1);
-   ideal I = imap(R,I);
-   map phi = Shelp1,p1;
-   setring Shelp1;
-   ideal F = preimage(Rhelp1,phi,I);
-   poly f = gcd(F[1],diff(F[1],var(1)));
-   int e = deg(F[1]/f);
-   setring R;
-   if(e != d)
-   {
-      poly p2 = findGen(I,q1);
-      setring Rhelp1;
-      poly p2 = imap(R,p2);
-      phi = Shelp1,p2;
-      setring Shelp1;
-      F = preimage(Rhelp1,phi,I);
-      f = gcd(F[1],diff(F[1],var(1)));
-      e = deg(F[1]/f);
-      setring R;
-      if(e == d){ return(1); }
-      if(e != d)
+      p = prime(random(100000000,536870912));
+
+      // change to characteristic p
+      if(typeof(rl[1]) == "int")
       {
-         int q2 = prime(random(100000000,536870912));
-         rl[1] = q2;
-         ring Shelp2 = q2,T,dp;
-         setring R;
-         def Rhelp2 = ring(rl);
-         setring Rhelp2;
-         poly p1 = imap(R,p1);
-         ideal I = imap(R,I);
-         map phi = Shelp2,p1;
-         setring Shelp2;
-         ideal F = preimage(Rhelp2,phi,I);
-         poly f = gcd(F[1],diff(F[1],var(1)));
-         e = deg(F[1]/f);
-         setring R;
-         if(e == d){ return(1); }
+         rl[1] = p;
       }
+      else
+      {
+         rl[1][1] = p;
+      }
+      def Rp(i) = ring(rl);
+      setring Rp(i);
+      ideal I = imap(R, I);
+
+      // find and test transformation
+      poly r;
+      poly F;
+      okay, r, F = findGen(I, d);
+      if(okay)
+      {
+         poly f = gcd(F, diff(F, var(1)));
+         if(d == deg(F/f))   // F squarefree?
+         {
+            setring(R);
+            return(1, imap(Rp(i), r));
+         }
+      }
+      setring(R);
    }
-   return((e==d));
+   return(0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
