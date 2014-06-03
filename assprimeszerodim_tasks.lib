@@ -86,7 +86,7 @@ EXAMPLE: example zeroRadical; shows an example
    }
    else
    {
-      return(modStd(I + F), exactness);
+      return(modStd(I + F, exactness));
    }
 }
 example
