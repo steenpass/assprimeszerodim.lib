@@ -219,9 +219,12 @@ EXAMPLE: example assPrimes; shows an example
 
    /* compute the radical if necessary */
    ideal J = I;
-   int isRad;
+   int isRad = 0;
    poly f;
-   isRad, f = pTestRad(I, d);
+   if(exactness)
+   {
+     isRad, f = pTestRad(I, d);
+   }
    while(!isRad)
    {
       J = zeroRadical(I, exactness);
